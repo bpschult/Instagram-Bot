@@ -1,0 +1,135 @@
+#import selenium
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+import time
+import random
+
+class Instagram_Bot:
+    username = 'INSERT USERNAME HERE'
+    password = 'INSERT PASSWORD HERE'
+    base_url = 'https://www.instagram.com'
+
+    def __init__(self):
+        #you are going to need to download chrome driver appropriate to your operating system. The link can be found here: https://chromedriver.chromium.org/
+        self.driver = webdriver.Chrome('EXAMPLE: /Users/johnsmith/Desktop/folder/chromedriver')
+        self.login()
+        
+
+    def login(self):
+        self.driver.get('{}/accounts/login/'.format(self.base_url))
+        time.sleep(2)
+
+        username_field = self.driver.find_element_by_xpath("//input[@name='username']")
+        username_field.clear()
+        username_field.send_keys(self.username)
+        time.sleep(1)
+
+        password_field = self.driver.find_element_by_xpath("//input[@name='password']")
+        password_field.clear()
+        password_field.send_keys(self.password)
+        time.sleep(1)
+
+        login_button = self.driver.find_element_by_xpath("//button[@type='submit']")
+        login_button.click()
+        time.sleep(2)
+
+    def like_photo(self, hashtag):
+        driver = self.driver
+        driver.get("https://www.instagram.com/explore/tags/" + hashtag + "/")
+        time.sleep(2)
+
+        # gathering photos
+        pic_hrefs = []
+        for i in range(1, 7):
+            try:
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(2)
+                # get tags
+                hrefs_in_view = driver.find_elements_by_tag_name('a')
+                # finding relevant hrefs
+                hrefs_in_view = [elem.get_attribute('href') for elem in hrefs_in_view
+                                 if '.com/p/' in elem.get_attribute('href')]
+                # building list of unique photos
+                [pic_hrefs.append(href) for href in hrefs_in_view if href not in pic_hrefs]
+                print("Check: pic href length " + str(len(pic_hrefs)))
+            except Exception:
+                continue
+        
+        unique_photos = len(pic_hrefs)
+        for pic_href in pic_hrefs:
+            driver.get(pic_href)
+            time.sleep(2)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            try:
+                time.sleep(random.randint(1, 100))
+                like_button = lambda: driver.find_element_by_xpath('//span[@aria-label="Like"]').click()
+                like_button().click()
+                for second in reversed(range(0, random.randint(1, 100))):
+                    print_same_line("#" + hashtag + ': unique photos left: ' + str(unique_photos)
+                                    + " | Sleeping " + str(second))
+                    time.sleep(random.randint(2,20))
+            except Exception as e:
+                time.sleep(2)
+            unique_photos -= 1
+
+            
+    def follow (self,hashtag):
+        driver = self.driver
+        driver.get("https://www.instagram.com/explore/tags/" + hashtag + "/")
+        time.sleep(2)
+
+        # gathering photos
+        pic_hrefs = []
+        for i in range(1, 7):
+            try:
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(2)
+                # get tags
+                hrefs_in_view = driver.find_elements_by_tag_name('a')
+                # finding relevant hrefs
+                hrefs_in_view = [elem.get_attribute('href') for elem in hrefs_in_view
+                                 if '.com/p/' in elem.get_attribute('href')]
+                # building list of unique photos
+                [pic_hrefs.append(href) for href in hrefs_in_view if href not in pic_hrefs]
+                print("Check: pic href length " + str(len(pic_hrefs)))
+            except Exception:
+                continue
+        
+        unique_photos = len(pic_hrefs)
+        for pic_href in pic_hrefs:
+            driver.get(pic_href)
+            time.sleep(2)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            try:
+                time.sleep(random.randint(2, 100))
+                follow_button = lambda: driver.find_element_by_xpath("//*[contains(text(), 'Follow')]").click()
+                follow_button().click()
+                time.sleep(random.randint(1,100))
+                for second in reversed(range(0, random.randint(2,4))):
+                    print_same_line("#" + hashtag + ': unique photos left: ' + str(unique_photos)
+                                    + " | Sleeping " + str(second))
+                    time.sleep(1)
+            except Exception as e:
+                time.sleep(2)
+            unique_photos -= 1
+
+if __name__ == "__main__":
+
+    ig_bot = Instagram_Bot()
+    #insert desired hashtags
+    hashtags = ['fishing', 'sharkfishing', 'saltwaterfishing', 'shorefishing', 'fish',
+                'penn', 'abugarcia', 'shimano', 'barrettrods', 'okuma', 'catchandrelease', 'rapala', 'snook', 'florida', 'surffishing', 'outdoors']
+
+    while True:
+        try:
+            #Chooses a random tag from the list of tags
+            tag = random.choice(hashtags)
+            ig_bot.like_photo(tag)
+            #ig_bot.follow(tag)
+            time.sleep(10)
+
+            
+        except Exception:
+            ig_bot.closeBrowser()
+            time.sleep(60)
+            ig_bot.login()
